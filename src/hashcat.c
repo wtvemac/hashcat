@@ -980,6 +980,8 @@ static int outer_loop (hashcat_ctx_t *hashcat_ctx, const int iteration)
     EVENT (EVENT_SELFTEST_FINISHED);
   }
 
+  if (user_options->self_test_only) return 0;
+
   /**
    * (old) weak hash check is the first to write to potfile, so open it for writing from here
    * the weak hash check was removed maybe we can move this more to the bottom now

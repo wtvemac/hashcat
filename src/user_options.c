@@ -141,6 +141,7 @@ static const struct option long_options[] =
   {"scrypt-tmto",               required_argument, NULL, IDX_SCRYPT_TMTO},
   {"segment-size",              required_argument, NULL, IDX_SEGMENT_SIZE},
   {"self-test-disable",         no_argument,       NULL, IDX_SELF_TEST_DISABLE},
+  {"self-test-only",            no_argument,       NULL, IDX_SELF_TEST_ONLY},
   {"separator",                 required_argument, NULL, IDX_SEPARATOR},
   {"seperator",                 required_argument, NULL, IDX_SEPARATOR},
   {"session",                   required_argument, NULL, IDX_SESSION},
@@ -307,6 +308,7 @@ int user_options_init (hashcat_ctx_t *hashcat_ctx)
   user_options->scrypt_tmto               = SCRYPT_TMTO;
   user_options->segment_size              = SEGMENT_SIZE;
   user_options->self_test                 = SELF_TEST;
+  user_options->self_test_only            = SELF_TEST_ONLY;
   user_options->separator                 = SEPARATOR;
   user_options->session                   = PROGNAME;
   user_options->show                      = SHOW;
@@ -464,6 +466,7 @@ int user_options_getopt (hashcat_ctx_t *hashcat_ctx, int argc, char **argv)
       case IDX_HASH_INFO:                 user_options->hash_info++;                                                 break;
       case IDX_FORCE:                     user_options->force                     = true;                            break;
       case IDX_SELF_TEST_DISABLE:         user_options->self_test                 = false;                           break;
+      case IDX_SELF_TEST_ONLY:            user_options->self_test_only            = true;                            break;
       case IDX_SKIP:                      user_options->skip                      = hc_strtoull (optarg, NULL, 10);
                                           user_options->skip_chgd                 = true;                            break;
       case IDX_LIMIT:                     user_options->limit                     = hc_strtoull (optarg, NULL, 10);
@@ -1347,6 +1350,11 @@ int user_options_sanity (hashcat_ctx_t *hashcat_ctx)
 
       return -1;
     }
+  }
+
+  if (user_options->self_test_only == true)
+  {
+    user_options->benchmark = true;
   }
 
   if (user_options->benchmark_all == true)
@@ -3747,6 +3755,7 @@ void user_options_logger (hashcat_ctx_t *hashcat_ctx)
   logfile_top_uint   (user_options->scrypt_tmto);
   logfile_top_uint   (user_options->segment_size);
   logfile_top_uint   (user_options->self_test);
+  logfile_top_uint   (user_options->self_test_only);
   logfile_top_uint   (user_options->slow_candidates);
   logfile_top_uint   (user_options->show);
   logfile_top_uint   (user_options->speed_only);

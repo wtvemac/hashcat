@@ -794,6 +794,7 @@ typedef enum user_options_defaults
   SCRYPT_TMTO              = 0,
   SEGMENT_SIZE             = 33554432,
   SELF_TEST                = true,
+  SELF_TEST_ONLY           = false,
   SHOW                     = false,
   SKIP                     = 0,
   SLOW_CANDIDATES          = false,
@@ -955,6 +956,7 @@ typedef enum user_options_map
   IDX_VERSION                   = 'V',
   IDX_WORDLIST_AUTOHEX_DISABLE  = 0xff54,
   IDX_WORKLOAD_PROFILE          = 'w',
+  IDX_SELF_TEST_ONLY            = 0xff69,
 
 } user_options_map_t;
 
@@ -2515,6 +2517,7 @@ typedef struct user_options
   bool         restore;
   bool         restore_enable;
   bool         self_test;
+  bool         self_test_only;
   bool         show;
   bool         slow_candidates;
   bool         speed_only;
