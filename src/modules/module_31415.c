@@ -151,23 +151,25 @@ int module_hash_decode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
 
   // Convert text input into integers so we can process the input faster.
 
-  // Digest or encrypted result using the password we need to search for.
-  const u8 *hash_pos = token.buf[0];
+  // Digest or unencrypted data using the password we need to search for.
+  // We're blowing a hole in the last byte because I don't have confidence I know the value of those.
+  // So blank it out so I can compare it without that data.
+  const u8 *hash_pos = token.buf[1];
   u32 *digest = (u32 *) digest_buf;
-  digest[0] = hex_to_u32 (hash_pos + 0);
-  digest[1] = hex_to_u32 (hash_pos + 8);
-  // Reverse the FP by applying the IP to the encrypted block so we can compare this encrypted block faster.
-  DES_IP (digest[0], digest[1]);
+  digest[0] = byte_swap_32 (hex_to_u32 (hash_pos + 0)) >> 8;
+  digest[1] = byte_swap_32 (hex_to_u32 (hash_pos + 8)) >> 8;
 
-  // Salt or unencrypted data.
-  const u8 *salt_pos = token.buf[1];
+  // Salt or encrypted data.
+  const u8 *salt_pos = token.buf[0];
   salt->salt_len = 8;
   salt->salt_buf[0] = hex_to_u32 (salt_pos + 0);
   salt->salt_buf[1] = hex_to_u32 (salt_pos + 8);
   salt->salt_buf[2] = 0;
   salt->salt_buf[3] = 0;
-  salt->salt_buf_pc[0] = byte_swap_32(salt->salt_buf[0]);
-  salt->salt_buf_pc[1] = byte_swap_32(salt->salt_buf[1]);
+  salt->salt_buf_pc[0] = salt->salt_buf[0];
+  salt->salt_buf_pc[1] = salt->salt_buf[1];
+  // Reverse the FP by applying the IP to the encrypted block. Doing this before the password loop to save cycles.
+  DES_IP (salt->salt_buf_pc[0], salt->salt_buf_pc[1]);
 
   return (PARSER_OK);
 }
@@ -184,17 +186,14 @@ int module_hash_encode (MAYBE_UNUSED const hashconfig_t *hashconfig, MAYBE_UNUSE
   tmp[2] = 0;
   tmp[3] = 0;
 
-  // Apply final permutation so the output looks correct. This isn't done in the cracking process to save cycles.
-  DES_FP (tmp[1], tmp[0]);
-
   // Convert integer data into text to show the user.
 
   int out_len = 0;
   u8 *out_buf = (u8 *) line_buf;
 
   // Digest
-  u32_to_hex (tmp[0], out_buf + out_len); out_len += 8;
-  u32_to_hex (tmp[1], out_buf + out_len); out_len += 8;
+  u32_to_hex (byte_swap_32(tmp[0] << 8), out_buf + out_len); out_len += 8;
+  u32_to_hex (byte_swap_32(tmp[1] << 8), out_buf + out_len); out_len += 8;
 
   // :
   out_buf[out_len] = hashconfig->separator; out_len++;
